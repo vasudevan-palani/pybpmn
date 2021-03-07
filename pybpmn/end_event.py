@@ -5,7 +5,7 @@ from .task import Task
 
 logger = logging.getLogger(__name__)
 
-class StartEvent(Task):
+class EndEvent(Task):
     def __init__(self,activity_data,process_instance):
         self.activity_data = activity_data
         self.process_instance = process_instance
@@ -14,7 +14,7 @@ class StartEvent(Task):
 
         self._execute(context)
 
-        context[self.activity_data.get("@name","start")] = {
+        context[self.activity_data.get("@name","end")] = {
             "start_time" : datetime.now()
         }
         

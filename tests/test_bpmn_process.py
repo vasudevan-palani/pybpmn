@@ -20,6 +20,8 @@ def test_process():
             logger.info("Entering task task_2")
 
         def on_task_2(self,**kargs):
+            context = kargs.get("context")
+            context["user"] = True
             task_context = kargs.get("task")
             task_context.update({
                 "name1" : "value1"
@@ -38,8 +40,31 @@ def test_process():
         def on_exit_task_3(self,**kargs):
             logger.info("Exiting task task_3")
 
+        def on_enter_task_4(self,**kargs):
+            logger.info("Entering task task_4")
+
+        def on_task_4(self,**kargs):
+            logger.info("Process task task_4")
+
+        def on_exit_task_4(self,**kargs):
+            logger.info("Exiting task task_4")
+
+        def on_enter_task_5(self,**kargs):
+            logger.info("Entering task task_5")
+
+        def on_task_5(self,**kargs):
+            context = kargs.get("context")
+            context["user"] = True
+            task_context = kargs.get("task")
+            task_context.update({
+                "name1" : "value1"
+            })
+            logger.info("Process task task_5")
+
+        def on_exit_task_5(self,**kargs):
+            logger.info("Exiting task task_5")
+
     instance = BpmnProcess()
     instance.start_process(open("tests/data/test_bpmn.xml","r").read(),Handler())
-    act_id = instance.get_activity_by_name("task_3")
-    instance.complete_task(act_id,{"datatoadd":"Valuetoadd"})
-    
+    instance.get_activity_by_name("task_3").complete({"datatoadd":"Valuetoadd"})
+    instance.get_activity_by_name("task_5").complete({"datatoadd1":"Valuetoadd2"})
