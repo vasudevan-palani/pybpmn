@@ -1,0 +1,8 @@
+build/
+dist/
+*egg*
+test/.tmp/
+.pytest_cache/
+__pycache__/
+.venv/
+.vscode/
