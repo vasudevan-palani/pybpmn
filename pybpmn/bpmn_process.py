@@ -39,18 +39,36 @@ class BpmnProcess:
         activities = []
         for result in results:
             (activity_type,activity_id,activity_data) = result
-            if(activity_type == "bpmn:serviceTask"):
-                activities.append(ServiceTask(activity_data,self))
-            if(activity_type == "bpmn:userTask"):
-                activities.append(UserTask(activity_data,self))
-            if(activity_type == "bpmn:exclusiveGateway"):
-                activities.append(ExclusiveGateway(activity_data,self))
-            if(activity_type == "bpmn:endEvent"):
-                activities.append(EndEvent(activity_data,self))
+            activity = self.get_activity_for_outgoing(activity_type,activity_id,activity_data)
+            if activity :
+                activities.append(activity)
 
         for activity in activities:
-            self.activities.append(activity)
             activity.execute(self.context)
+
+    def get_activity_for_outgoing(self,activity_type,activity_id,activity_data):
+        for activity in self.activities:
+            if hasattr(activity,"id") and activity.id == activity_id:
+                return activity
+    
+        activity = None
+        if(activity_type == "bpmn:serviceTask"):
+            activity = ServiceTask(activity_data,self)
+            self.activities.append(activity)
+        if(activity_type == "bpmn:userTask"):
+            activity = UserTask(activity_data,self)
+            self.activities.append(activity)
+        if(activity_type == "bpmn:exclusiveGateway"):
+            activity = ExclusiveGateway(activity_data,self)
+            self.activities.append(activity)
+        if(activity_type == "bpmn:endEvent"):
+            activity = EndEvent(activity_data,self)
+            self.activities.append(activity)
+
+        return activity
+
+        
+        
 
     def _execute_task(self,task_name):
         getattr(self.handler, f'on_enter_{task_name}')(self)
@@ -68,7 +86,7 @@ class BpmnProcess:
                     if hasattr(activity,'activity_id') and activity.activity_id == activity_dict.get("activity_id"):
                         return activity
 
-        return Nones
+        return None
 
     def _get_start_task_name(self):
         return self.process_definition.get("bpmn:startEvent",{})

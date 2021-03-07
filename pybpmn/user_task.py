@@ -24,7 +24,6 @@ class UserTask(Task):
         task = self.task_context
         context = self.context
 
-        self.process_instance.evaluate_results(self.get_outgoing_activities())
         getattr(self.process_instance.handler,f"on_exit_{name}")(context = context,task = task)
         getattr(self.process_instance.handler,f"on_exit_task")(context = context,task = task)
         task["end_time"] = datetime.now()

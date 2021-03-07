@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 class Task(BpmnComponent):
 
     def __init__(self,activity_data,process_instance):
+        self.id = activity_data.get("@id")
         self.activity_data = activity_data
         self.process_instance = process_instance
 

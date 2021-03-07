@@ -13,19 +13,74 @@ class ExclusiveGateway(Gateway):
         name = self.name
         task = self.task_context
         
-        # getattr(self.process_instance.handler,f"on_enter_task")(context = context,task = task)
-        # getattr(self.process_instance.handler,f"on_enter_{name}")(context = context,task = task)
-        # getattr(self.process_instance.handler,f"on_{name}")(context = context,task = task)
-        # getattr(self.process_instance.handler,f"on_exit_{name}")(context = context,task = task)
-        # getattr(self.process_instance.handler,f"on_exit_task")(context = context,task = task)
+        context[name]["start_time"] = datetime.now()        
         context[name]["end_time"] = datetime.now()
-        
         self.process_instance.evaluate_results(self.get_outgoing_activities())
 
+
+    def is_atleast_one_incoming_complete(self):
+        incomingflowids = self.activity_data.get("bpmn:incoming")
+        source_activity_refs=[]
+        if type(incomingflowids) == type([]):
+            for incomingflowid in incomingflowids:
+                for seq_flow in self.process_instance.process_definition.get("bpmn:sequenceFlow"):
+                    if(seq_flow.get("@id") == incomingflowid):
+                        source_activity_refs.append(seq_flow.get("@sourceRef"))
+
+        source_activity_names = []
+        for source_activity_ref in source_activity_refs:
+            for component_name in self.process_instance.process_definition:
+                if type(self.process_instance.process_definition[component_name]) == type(dict()):
+                    component = self.process_instance.process_definition[component_name]
+                    if component.get("@id") == source_activity_ref:
+                        source_activity_names.append(component.get("@name"))
+
+                if type(self.process_instance.process_definition[component_name]) == type([]):
+                    for component in self.process_instance.process_definition[component_name]:
+                        if component.get("@id") == source_activity_ref:
+                            source_activity_names.append(component.get("@name"))
+
+        for source_activity_name in source_activity_names:
+            if(self.context.get(source_activity_name,{}).get("status") == "COMPLETED"):
+                return True
+
+        return False
+
+    def is_all_incoming_complete(self):
+        incomingflowids = self.activity_data.get("bpmn:incoming")
+        source_activity_refs=[]
+        if type(incomingflowids) == type([]):
+            for incomingflowid in incomingflowids:
+                for seq_flow in self.process_instance.process_definition.get("bpmn:sequenceFlow"):
+                    if(seq_flow.get("@id") == incomingflowid):
+                        source_activity_refs.append(seq_flow.get("@sourceRef"))
+
+        source_activity_names = []
+        for source_activity_ref in source_activity_refs:
+            for component_name in self.process_instance.process_definition:
+                if type(self.process_instance.process_definition[component_name]) == type(dict()):
+                    component = self.process_instance.process_definition[component_name]
+                    if component.get("@id") == source_activity_ref:
+                        source_activity_names.append(component.get("@name"))
+
+                if type(self.process_instance.process_definition[component_name]) == type([]):
+                    for component in self.process_instance.process_definition[component_name]:
+                        if component.get("@id") == source_activity_ref:
+                            source_activity_names.append(component.get("@name"))
+
+        for source_activity_name in source_activity_names:
+            if(self.context.get(source_activity_name,{}).get("status","NOT_DEFINED") != "COMPLETED"):
+                return False
+
+        return True
 
     def get_outgoing_activities(self):
         context = self.context
         outgoingflowids = self.activity_data.get("bpmn:outgoing")
+        
+        if type(outgoingflowids) != type([]):
+            outgoingflowids = [outgoingflowids]
+
         target_activity_ids=[]
         if type(outgoingflowids) == type([]):
             for outgoingflowid in outgoingflowids:
@@ -34,6 +89,8 @@ class ExclusiveGateway(Gateway):
                         if seq_flow.get("bpmn:conditionExpression",{}).get("#text") != None:
                             if eval(seq_flow.get("bpmn:conditionExpression",{}).get("#text")) == True:
                                 target_activity_ids.append(seq_flow.get("@targetRef"))                
+                        else:
+                            target_activity_ids.append(seq_flow.get("@targetRef"))
                         
 
         targets = []
