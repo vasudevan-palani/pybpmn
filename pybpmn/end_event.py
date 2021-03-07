@@ -17,5 +17,6 @@ class EndEvent(Task):
         context[self.activity_data.get("@name","end")] = {
             "start_time" : datetime.now()
         }
+        context["status"] = "COMPLETED"
         
         self.process_instance.evaluate_results(self.get_outgoing_activities())

@@ -14,6 +14,7 @@ class UserTask(Task):
         name = self.name
 
         task = self.task_context
+        task["status"] = "STARTED"
 
         getattr(self.process_instance.handler,f"on_enter_task")(context = context,task = task)
         getattr(self.process_instance.handler,f"on_enter_{name}")(context = context,task = task)
@@ -27,6 +28,7 @@ class UserTask(Task):
         getattr(self.process_instance.handler,f"on_exit_{name}")(context = context,task = task)
         getattr(self.process_instance.handler,f"on_exit_task")(context = context,task = task)
         task["end_time"] = datetime.now()
+        task["status"] = "COMPLETED"
         task.update(input_task_context)
 
         self.process_instance.evaluate_results(self.get_outgoing_activities())

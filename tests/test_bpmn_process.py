@@ -67,4 +67,4 @@ def test_process():
     instance = BpmnProcess()
     instance.start_process(open("tests/data/test_bpmn.xml","r").read(),Handler())
     instance.get_activity_by_name("task_3").complete({"datatoadd":"Valuetoadd"})
-    instance.get_activity_by_name("task_5").complete({"datatoadd1":"Valuetoadd2"})
+    #instance.get_activity_by_name("task_5").complete({"datatoadd1":"Valuetoadd2"})

@@ -14,6 +14,8 @@ class StartEvent(Task):
 
         self._execute(context)
 
+        context["status"] = "STARTED"
+
         context[self.activity_data.get("@name","start")] = {
             "start_time" : datetime.now()
         }
