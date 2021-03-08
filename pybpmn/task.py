@@ -28,6 +28,7 @@ class Task(BpmnComponent):
         self.task_context = self.context[name]
         self.task_context["start_time"] = datetime.now()
         self.task_context["name"] = name
+        self.task_context["id"] = self.id
         self.task_context["activity_id"] = self.activity_id
         
         logger.info({

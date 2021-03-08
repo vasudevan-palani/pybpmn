@@ -14,7 +14,7 @@ class BpmnProcess:
     def __init__(self):
         self.activities = []
 
-    def start_process(self,process_definition,handler):
+    def start_process(self,process_definition,handler,context={}):
         parser = BpmnParser()
         self.process_definition = parser.load(process_definition)
         self.process_instance_id = str(uuid.uuid4())
@@ -22,6 +22,8 @@ class BpmnProcess:
             "process_instance_id" : self.process_instance_id,
             "created_time" : datetime.now()
         }
+
+        self.context.update(context)
         self.handler = handler
 
         self._start_execution()
