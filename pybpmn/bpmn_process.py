@@ -3,6 +3,7 @@ from .start_event import StartEvent
 from .service_task import ServiceTask
 from .user_task import UserTask
 from .end_event import EndEvent
+from .task import Task
 from .exclusive_gateway import ExclusiveGateway
 import uuid
 from datetime import datetime, timezone
@@ -22,21 +23,25 @@ class BpmnProcess:
             "process_instance_id" : self.process_instance_id,
             "created_time" : datetime.now()
         }
+        self.payload = context
 
-        self.context.update(context)
         self.handler = handler
 
         self._start_execution()
+
+    def set_payload(self,payload):
+        self.payload = payload
 
     def _start_execution(self):
         self._execute_start_event()
 
     def _execute_start_event(self):
         start_event = StartEvent(self.process_definition.get("bpmn:startEvent",{}),self)
-        start_event.execute(self.context)
+        start_event.execute(self.context,self.payload)
 
     def evaluate_results(self,results):
         logger.info(self.context)
+        logger.info(self.payload)
         logger.info(results)
         activities = []
         for result in results:
@@ -46,7 +51,7 @@ class BpmnProcess:
                 activities.append(activity)
 
         for activity in activities:
-            activity.execute(self.context)
+            activity.execute(self.context,self.payload)
 
     def get_activity_for_outgoing(self,activity_type,activity_id,activity_data):
         for activity in self.activities:
@@ -70,7 +75,13 @@ class BpmnProcess:
         return activity
 
         
-        
+    def get_activity_started(self):
+        activities = []
+        for activity in self.activities:
+            if isinstance(activity,Task) and self.context.get(activity.name,{}).get("status") == "STARTED":
+                activities.append(activity)
+
+        return activities
 
     def _execute_task(self,task_name):
         getattr(self.handler, f'on_enter_{task_name}')(self)

@@ -21,10 +21,10 @@
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_1gvxf0x" sourceRef="Activity_0g40327" targetRef="Gateway_1t6wkv8" />
     <bpmn:sequenceFlow id="Flow_1q2frmy" sourceRef="Gateway_1t6wkv8" targetRef="Activity_1wvoerl">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">context.get("user") != True</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">payload.get("user") != True</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1jgy896" sourceRef="Gateway_1t6wkv8" targetRef="Activity_0h7ctgu">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">context.get("user") == True</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">payload.get("user") == True</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:userTask id="Activity_0h7ctgu" name="task_5">
       <bpmn:incoming>Flow_1jgy896</bpmn:incoming>

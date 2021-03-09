@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 class ExclusiveGateway(Gateway):
     
-    def execute(self,context):
-        self._execute(context)
+    def execute(self,context,payload):
+        self._execute(context,payload)
         name = self.name
         task = self.task_context
         
@@ -76,6 +76,7 @@ class ExclusiveGateway(Gateway):
 
     def get_outgoing_activities(self):
         context = self.context
+        payload = self.payload
         outgoingflowids = self.activity_data.get("bpmn:outgoing")
         
         if type(outgoingflowids) != type([]):

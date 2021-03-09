@@ -7,9 +7,9 @@ logger = logging.getLogger(__name__)
 
 class StartEvent(Task):
 
-    def execute(self,context):
+    def execute(self,context,payload):
 
-        self._execute(context)
+        self._execute(context,payload)
 
         context["status"] = "STARTED"
 

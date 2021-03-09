@@ -21,7 +21,8 @@ def test_process():
 
         def on_task_2(self,**kargs):
             context = kargs.get("context")
-            context["user"] = True
+            payload = kargs.get("payload")
+            payload["user"] = True
             task_context = kargs.get("task")
             task_context.update({
                 "name1" : "value1"

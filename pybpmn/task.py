@@ -12,24 +12,29 @@ class Task(BpmnComponent):
         self.id = activity_data.get("@id")
         self.activity_data = activity_data
         self.process_instance = process_instance
-
-    @abc.abstractmethod
-    def execute(self,context):
-        pass
-    
-    def _execute(self,context):
-        self.context = context
         self.name = self.activity_data.get("@name")
         self.activity_id = str(uuid.uuid4())
+
+    @abc.abstractmethod
+    def execute(self,context,payload):
+        pass
+    
+    def _execute(self,context,payload):
+        self.context = context
+        self.payload = payload
         name = self.name
         if ( self.context.get(name) == None ) :
             self.context[name] = {}
+
+        if ( self.payload.get(name) == None ) :
+            self.payload[name] = {}
 
         self.task_context = self.context[name]
         self.task_context["start_time"] = datetime.now()
         self.task_context["name"] = name
         self.task_context["id"] = self.id
         self.task_context["activity_id"] = self.activity_id
+        self.payload_task = payload[name]
         
         logger.info({
             "message": f"Executing service task:{name}",

@@ -7,9 +7,9 @@ logger = logging.getLogger(__name__)
 
 class EndEvent(Task):
 
-    def execute(self,context):
+    def execute(self,context,payload):
 
-        self._execute(context)
+        self._execute(context,payload)
 
         context[self.activity_data.get("@name","end")] = {
             "start_time" : datetime.now(),
