@@ -41,6 +41,16 @@ class Task(BpmnComponent):
             "data" : self.activity_data
         })
 
+    def outgoing_flow_success(self,flow_id):
+        context = self.context
+        if context.get(flow_id) == None:
+            context[flow_id] = {}
+
+        context[flow_id]["start_time"] = datetime.now()        
+        context[flow_id]["end_time"] = datetime.now()
+        context[flow_id]["id"] = flow_id
+
+
     def get_outgoing_activities(self):
         
         outgoingflowid = self.activity_data.get("bpmn:outgoing")
@@ -50,7 +60,8 @@ class Task(BpmnComponent):
         target_activity_data = None
         for seq_flow in self.process_instance.process_definition.get("bpmn:sequenceFlow"):
             if(seq_flow.get("@id") == outgoingflowid):
-                 target_activity_id = seq_flow.get("@targetRef")
+                self.outgoing_flow_success(outgoingflowid)
+                target_activity_id = seq_flow.get("@targetRef")
 
         for component_name in self.process_instance.process_definition:
             
