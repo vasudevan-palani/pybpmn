@@ -17,6 +17,14 @@ class ExclusiveGateway(Gateway):
         context[name]["end_time"] = datetime.now()
         self.process_instance.evaluate_results(self.get_outgoing_activities())
 
+    def outgoing_flow_success(self,flow_id):
+        context = self.context
+        if context.get(flow_id) == None:
+            context[flow_id] = {}
+
+        context[flow_id]["start_time"] = datetime.now()        
+        context[flow_id]["end_time"] = datetime.now()
+        context[flow_id]["id"] = flow_id
 
     def is_atleast_one_incoming_complete(self):
         incomingflowids = self.activity_data.get("bpmn:incoming")
@@ -89,9 +97,11 @@ class ExclusiveGateway(Gateway):
                     if(seq_flow.get("@id") == outgoingflowid):
                         if seq_flow.get("bpmn:conditionExpression",{}).get("#text") != None:
                             if eval(seq_flow.get("bpmn:conditionExpression",{}).get("#text")) == True:
-                                target_activity_ids.append(seq_flow.get("@targetRef"))                
+                                target_activity_ids.append(seq_flow.get("@targetRef"))
+                                self.outgoing_flow_success(outgoingflowid)
                         else:
                             target_activity_ids.append(seq_flow.get("@targetRef"))
+                            self.outgoing_flow_success(outgoingflowid)
                         
 
         targets = []
