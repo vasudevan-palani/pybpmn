@@ -15,7 +15,7 @@ class BpmnProcess:
     def __init__(self):
         self.activities = []
 
-    def start_process(self,process_definition,handler,context={}):
+    def start_process(self,process_definition,handler=None,context={}):
         parser = BpmnParser()
         self.process_definition = parser.load(process_definition)
         self.process_instance_id = str(uuid.uuid4())
@@ -40,9 +40,6 @@ class BpmnProcess:
         start_event.execute(self.context,self.payload)
 
     def evaluate_results(self,results):
-        logger.info(self.context)
-        logger.info(self.payload)
-        logger.info(results)
         activities = []
         for result in results:
             (activity_type,activity_id,activity_data) = result
