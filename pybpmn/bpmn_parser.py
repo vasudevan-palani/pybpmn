@@ -13,5 +13,4 @@ class BpmnParser:
     def load(self,process_definition):
         final_definition = {}
         json_process_definition = xmltodict.parse(process_definition)
-        print(json.dumps(json_process_definition,indent=4))
         return json.loads(json.dumps(json_process_definition.get("bpmn:definitions",{}).get("bpmn:process",{})))
