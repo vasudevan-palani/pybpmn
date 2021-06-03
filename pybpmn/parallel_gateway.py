@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class ExclusiveGateway(Gateway):
+class ParallelGateway(Gateway):
     
     def execute(self,context,payload):
         self._execute(context,payload)
@@ -25,34 +25,6 @@ class ExclusiveGateway(Gateway):
         context[flow_id]["start_time"] = datetime.now()        
         context[flow_id]["end_time"] = datetime.now()
         context[flow_id]["id"] = flow_id
-
-    def is_atleast_one_incoming_complete(self):
-        incomingflowids = self.activity_data.get("bpmn:incoming")
-        source_activity_refs=[]
-        if type(incomingflowids) == type([]):
-            for incomingflowid in incomingflowids:
-                for seq_flow in self.process_instance.process_definition.get("bpmn:sequenceFlow"):
-                    if(seq_flow.get("@id") == incomingflowid):
-                        source_activity_refs.append(seq_flow.get("@sourceRef"))
-
-        source_activity_names = []
-        for source_activity_ref in source_activity_refs:
-            for component_name in self.process_instance.process_definition:
-                if type(self.process_instance.process_definition[component_name]) == type(dict()):
-                    component = self.process_instance.process_definition[component_name]
-                    if component.get("@id") == source_activity_ref:
-                        source_activity_names.append(component.get("@name"))
-
-                if type(self.process_instance.process_definition[component_name]) == type([]):
-                    for component in self.process_instance.process_definition[component_name]:
-                        if component.get("@id") == source_activity_ref:
-                            source_activity_names.append(component.get("@name"))
-
-        for source_activity_name in source_activity_names:
-            if(self.context.get(source_activity_name,{}).get("status") == "COMPLETED"):
-                return True
-
-        return False
 
     def is_all_incoming_complete(self):
         incomingflowids = self.activity_data.get("bpmn:incoming")
@@ -83,6 +55,10 @@ class ExclusiveGateway(Gateway):
         return True
 
     def get_outgoing_activities(self):
+
+        if self.is_all_incoming_complete() != True:
+            return None
+
         context = self.context
         payload = self.payload
         outgoingflowids = self.activity_data.get("bpmn:outgoing")
@@ -95,19 +71,8 @@ class ExclusiveGateway(Gateway):
             for outgoingflowid in outgoingflowids:
                 for seq_flow in self.process_instance.process_definition.get("bpmn:sequenceFlow"):
                     if(seq_flow.get("@id") == outgoingflowid):
-                        if seq_flow.get("bpmn:conditionExpression",{}).get("#text") != None:
-                            if eval(seq_flow.get("bpmn:conditionExpression",{}).get("#text")) == True:
-                                target_activity_ids.append(seq_flow.get("@targetRef"))
-                                self.outgoing_flow_success(outgoingflowid)
-
-                                # break at the first successful condition
-                                break
-                        else:
-                            # If there is no condition, choose the first path
-                            target_activity_ids.append(seq_flow.get("@targetRef"))
-                            self.outgoing_flow_success(outgoingflowid)
-                            break
-                        
+                        target_activity_ids.append(seq_flow.get("@targetRef"))
+                        self.outgoing_flow_success(outgoingflowid)
 
         targets = []
 

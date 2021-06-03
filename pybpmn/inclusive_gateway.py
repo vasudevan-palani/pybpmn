@@ -6,8 +6,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class ExclusiveGateway(Gateway):
-    
+class InclusiveGateway(Gateway):
+    """ Inclusive gateway implementation
+
+        If this gateway needs to be used as convergence gateway, The name of the gateway should match conv_{diverging_gateway_name}
+    """
     def execute(self,context,payload):
         self._execute(context,payload)
         name = self.name
@@ -26,7 +29,22 @@ class ExclusiveGateway(Gateway):
         context[flow_id]["end_time"] = datetime.now()
         context[flow_id]["id"] = flow_id
 
-    def is_atleast_one_incoming_complete(self):
+    def is_converge_gateway(self):
+        incomingflowids = self.activity_data.get("bpmn:incoming")
+        outgoingflowids = self.activity_data.get("bpmn:outgoing")
+
+        if(type(incomingflowids) != type([])):
+            incomingflowids = [incomingflowids]
+        
+        if(type(outgoingflowids) != type([])):
+            outgoingflowids = [outgoingflowids]
+
+        if len(incomingflowids) > 1 and len(outgoingflowids) == 1:
+            return True
+
+        return False
+
+    def is_converge_complete(self):
         incomingflowids = self.activity_data.get("bpmn:incoming")
         source_activity_refs=[]
         if type(incomingflowids) == type([]):
@@ -48,10 +66,14 @@ class ExclusiveGateway(Gateway):
                         if component.get("@id") == source_activity_ref:
                             source_activity_names.append(component.get("@name"))
 
+        complete_count = 0
         for source_activity_name in source_activity_names:
-            if(self.context.get(source_activity_name,{}).get("status") == "COMPLETED"):
-                return True
+            if(self.context.get(source_activity_name,{}).get("status","NOT_DEFINED") == "COMPLETED"):
+                complete_count = complete_count + 1
 
+        if len(self.context.get(self.name.replace("conv_",""),{}).get("success_paths",[])) == complete_count:
+            return True
+        
         return False
 
     def is_all_incoming_complete(self):
@@ -76,13 +98,25 @@ class ExclusiveGateway(Gateway):
                         if component.get("@id") == source_activity_ref:
                             source_activity_names.append(component.get("@name"))
 
+        complete_count = 0
         for source_activity_name in source_activity_names:
-            if(self.context.get(source_activity_name,{}).get("status","NOT_DEFINED") != "COMPLETED"):
-                return False
+            if(self.context.get(source_activity_name,{}).get("status","NOT_DEFINED") == "COMPLETED"):
+                complete_count = complete_count + 1
 
-        return True
+        if len(self.context.get(self.name.replace("conv_",""),{}).get("success_paths",[])) == complete_count:
+            return True
+        
+        return False
 
     def get_outgoing_activities(self):
+
+        # If this is a converge gateway, wait for all execution paths to converge
+        #
+        if self.is_converge_gateway() == True and self.is_converge_complete() != True:
+            return None
+
+        # If the gateway is a diverge gateway
+        #
         context = self.context
         payload = self.payload
         outgoingflowids = self.activity_data.get("bpmn:outgoing")
@@ -99,15 +133,9 @@ class ExclusiveGateway(Gateway):
                             if eval(seq_flow.get("bpmn:conditionExpression",{}).get("#text")) == True:
                                 target_activity_ids.append(seq_flow.get("@targetRef"))
                                 self.outgoing_flow_success(outgoingflowid)
-
-                                # break at the first successful condition
-                                break
                         else:
-                            # If there is no condition, choose the first path
                             target_activity_ids.append(seq_flow.get("@targetRef"))
                             self.outgoing_flow_success(outgoingflowid)
-                            break
-                        
 
         targets = []
 
@@ -131,4 +159,5 @@ class ExclusiveGateway(Gateway):
                             targets.append((target_activity_type,target_activity_id,target_activity_data))
 
 
+        self.context[self.name]["success_paths"] = targets
         return targets

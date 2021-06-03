@@ -5,9 +5,16 @@ from .user_task import UserTask
 from .end_event import EndEvent
 from .task import Task
 from .exclusive_gateway import ExclusiveGateway
+from .inclusive_gateway import InclusiveGateway
+from .parallel_gateway import ParallelGateway
 import uuid
 from datetime import datetime, timezone
 import logging
+
+import concurrent.futures
+import logging
+from concurrent.futures import ThreadPoolExecutor
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +47,8 @@ class BpmnProcess:
         start_event.execute(self.context,self.payload)
 
     def evaluate_results(self,results):
+        if results == None:
+            return
         activities = []
         for result in results:
             (activity_type,activity_id,activity_data) = result
@@ -47,8 +56,29 @@ class BpmnProcess:
             if activity :
                 activities.append(activity)
 
+        functions = []
+
         for activity in activities:
-            activity.execute(self.context,self.payload)
+            # def function1():
+            #     activity.execute(self.context,self.payload)
+            functions.append((activity.execute,self.context,self.payload))
+
+        if(len(activities) > 0):
+            self.execute_parallel(len(activities),functions)
+
+
+    def execute_parallel(self, workers, functions):
+        results = []
+        futures = []
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            for function_callable in functions:
+                futures.append(executor.submit(*function_callable))
+
+            concurrent.futures.wait(futures)
+
+            for future in futures:
+                results.append(future.result())
+        return results
 
     def get_activity_for_outgoing(self,activity_type,activity_id,activity_data):
         for activity in self.activities:
@@ -59,12 +89,23 @@ class BpmnProcess:
         if(activity_type == "bpmn:serviceTask"):
             activity = ServiceTask(activity_data,self)
             self.activities.append(activity)
+
         if(activity_type == "bpmn:userTask"):
             activity = UserTask(activity_data,self)
             self.activities.append(activity)
+
         if(activity_type == "bpmn:exclusiveGateway"):
             activity = ExclusiveGateway(activity_data,self)
             self.activities.append(activity)
+
+        if(activity_type == "bpmn:inclusiveGateway"):
+            activity = InclusiveGateway(activity_data,self)
+            self.activities.append(activity)
+
+        if(activity_type == "bpmn:parallelGateway"):
+            activity = ParallelGateway(activity_data,self)
+            self.activities.append(activity)
+
         if(activity_type == "bpmn:endEvent"):
             activity = EndEvent(activity_data,self)
             self.activities.append(activity)
