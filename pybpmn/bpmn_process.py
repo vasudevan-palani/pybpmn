@@ -141,3 +141,13 @@ class BpmnProcess:
 
     def _get_start_task_name(self):
         return self.process_definition.get("bpmn:startEvent",{})
+
+    def get_current_activiti_name(self):
+        """
+        returns comma seperated list of activities in "STARTED" i.e. in progress step.
+        """
+        activities_names = []   # more then one activiti can be in STARTED state for parallel tasks
+        for activity in self.activities:
+            if isinstance(activity, Task) and self.context.get(activity.name, {}).get("status") == "STARTED":
+                activities_names.append(activity.name)
+        return ",".join(activities_names) if activities_names else None
