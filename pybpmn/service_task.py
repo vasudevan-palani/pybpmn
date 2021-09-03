@@ -21,19 +21,19 @@ class ServiceTask(Task):
 
         if self.process_instance.handler != None:
             if hasattr(self.process_instance.handler,f"on_enter_task"):
-                getattr(self.process_instance.handler,f"on_enter_task")(context = context,task = payload_task, payload = payload)
+                getattr(self.process_instance.handler,f"on_enter_task")(context = context,task = payload_task, payload = payload, process_instance = self.process_instance)
                 
             if hasattr(self.process_instance.handler,f"on_enter_{name}"):
-                getattr(self.process_instance.handler,f"on_enter_{name}")(context = context,task = payload_task, payload = payload)
+                getattr(self.process_instance.handler,f"on_enter_{name}")(context = context,task = payload_task, payload = payload, process_instance = self.process_instance)
             
             if hasattr(self.process_instance.handler,f"on_{name}"):
-                getattr(self.process_instance.handler,f"on_{name}")(context = context,task = payload_task, payload = payload)
+                getattr(self.process_instance.handler,f"on_{name}")(context = context,task = payload_task, payload = payload, process_instance = self.process_instance)
 
             if hasattr(self.process_instance.handler,f"on_exit_{name}"):
-                getattr(self.process_instance.handler,f"on_exit_{name}")(context = context,task = payload_task, payload = payload)
+                getattr(self.process_instance.handler,f"on_exit_{name}")(context = context,task = payload_task, payload = payload, process_instance = self.process_instance)
 
             if hasattr(self.process_instance.handler,f"on_exit_task"):
-                getattr(self.process_instance.handler,f"on_exit_task")(context = context,task = payload_task, payload = payload)
+                getattr(self.process_instance.handler,f"on_exit_task")(context = context,task = payload_task, payload = payload, process_instance = self.process_instance)
         
         context[name]["end_time"] = datetime.now()
         task["status"] = "COMPLETED"
