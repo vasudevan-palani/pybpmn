@@ -15,6 +15,15 @@ class ExclusiveGateway(Gateway):
         
         context[name]["start_time"] = datetime.now()        
         context[name]["end_time"] = datetime.now()
+
+        self.payload_task = payload[name]
+        payload_task = self.payload_task
+
+        if self.process_instance.handler != None:
+            if hasattr(self.process_instance.handler,f"on_enter_{name}"):
+                getattr(self.process_instance.handler,f"on_enter_{name}")(context = context,task = payload_task, payload = payload, process_instance = self.process_instance)
+
+
         self.process_instance.evaluate_results(self.get_outgoing_activities())
 
     def outgoing_flow_success(self,flow_id):

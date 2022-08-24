@@ -73,6 +73,10 @@ class Handler():
 
     def on_exit_task_6(self,**kargs):
         logger.info("Exiting task task_6")
+
+    def on_enter_test_ex(self,**kargs):
+        logger.info("Entering gateway test_ex")
+
 def test_process():
 
     instance = BpmnProcess()
